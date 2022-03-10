@@ -5,6 +5,7 @@
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<RootNamespace>Newtonsoft.Json.SecureWebhooks</RootNamespace>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Copyright>Steven Thuriot</Copyright>
 		<Authors>Steven Thuriot</Authors>
@@ -15,7 +16,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.0" />
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\SecureWebhooks\SecureWebhooks.csproj" />
 	</ItemGroup>
 
 </Project>

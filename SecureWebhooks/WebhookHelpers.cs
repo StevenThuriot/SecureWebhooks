@@ -11,34 +11,37 @@ namespace SecureWebhooks;
 
 public static class WebhookHelpers
 {
-    private const string HookSignatureHeader = "X-Hook-Signature-256";
-    private const string SignaturePrefix = "sha256=";
-
-    public static StringContent CreateContentWithSecureHeader<T>(string secret, T payload, Func<T, string> serialize, string headerName = HookSignatureHeader)
+    public static StringContent CreateContentWithSecureHeader<T>(string secret, T payload, Func<T, string> serialize, string headerName = SecureWebhookConstants.HookSignatureHeader)
     {
         var payloadString = serialize(payload);
         return CreateContentWithSecureHeader(secret, payloadString, headerName);
     }
 
-    private static StringContent CreateContentWithSecureHeader(string secret, string payload, string headerName = HookSignatureHeader)
+    private static StringContent CreateContentWithSecureHeader(string secret, string payload, string headerName = SecureWebhookConstants.HookSignatureHeader)
     {
-        var content = new StringContent(payload, Encoding.UTF8, "application/json");
+#if NETSTANDARD2_0
+        const string mediaType = "application/json";
+#else
+        const string mediaType = System.Net.Mime.MediaTypeNames.Application.Json;
+#endif
+
+        StringContent content = new(payload, Encoding.UTF8, mediaType);
         content.AddSecureHeader(secret, payload, headerName);
         return content;
     }
 
-    public static void AddSecureHeader(this HttpContent content, string secret, string payload, string headerName = HookSignatureHeader)
+    public static void AddSecureHeader(this HttpContent content, string secret, string payload, string headerName = SecureWebhookConstants.HookSignatureHeader)
     {
         content.Headers.AddSecureHeader(secret, payload, headerName);
     }
 
-    public static void AddSecureHeader(this HttpContentHeaders headers, string secret, string payload, string headerName = HookSignatureHeader)
+    public static void AddSecureHeader(this HttpContentHeaders headers, string secret, string payload, string headerName = SecureWebhookConstants.HookSignatureHeader)
     {
         byte[] payloadBytes = Encoding.UTF8.GetBytes(payload);
         headers.Add(headerName, CreateHeaderValue(secret, payloadBytes));
     }
 
-    public static async Task<(bool isValid, T? payload)> ValidateAndGetPayload<T>(this HttpRequest request, string secret, Func<string, T> deserialize, string headerName = HookSignatureHeader)
+    public static async Task<(bool isValid, T? payload)> ValidateAndGetPayload<T>(this HttpRequest request, string secret, Func<string, T> deserialize, string headerName = SecureWebhookConstants.HookSignatureHeader)
     {
         var (isValid, payload) = await request.ValidateAndGetPayload(secret, headerName);
 
@@ -47,7 +50,7 @@ public static class WebhookHelpers
                 : (true, deserialize(payload!));
     }
 
-    public static async Task<(bool isValid, string? payload)> ValidateAndGetPayload(this HttpRequest request, string secret, string headerName = HookSignatureHeader)
+    public static async Task<(bool isValid, string? payload)> ValidateAndGetPayload(this HttpRequest request, string secret, string headerName = SecureWebhookConstants.HookSignatureHeader)
     {
         if (!request.Headers.TryGetValue(headerName, out var values))
         {
@@ -55,12 +58,12 @@ public static class WebhookHelpers
         }
 
         var signature = values.ToString();
-        if (signature?.StartsWith(SignaturePrefix, StringComparison.OrdinalIgnoreCase) != true)
+        if (signature?.StartsWith(SecureWebhookConstants.SignaturePrefix, StringComparison.OrdinalIgnoreCase) != true)
         {
             return (false, default);
         }
 
-        using var ms = new MemoryStream();
+        using MemoryStream ms = new();
         await request.Body.CopyToAsync(ms);
 
         var payload = ms.ToArray();
@@ -77,17 +80,17 @@ public static class WebhookHelpers
 
     private static string CreateHeaderValue(string secret, byte[] payload)
     {
-        return SignaturePrefix + CalculateSignature(secret, payload);
+        return SecureWebhookConstants.SignaturePrefix + CalculateSignature(secret, payload);
     }
 
     private static string CalculateSignature(string secret, byte[] payloadBytes)
     {
         byte[] secretBytes = Encoding.ASCII.GetBytes(secret);
-        using var sha = new HMACSHA256(secretBytes);
+        using HMACSHA256 sha = new(secretBytes);
 
         byte[] hash = sha.ComputeHash(payloadBytes);
 
-#if !NETSTANDARD
+#if NET5_0_OR_GREATER
         return Convert.ToHexString(hash);
 #elif NETSTANDARD2_1_OR_GREATER
         var bytes = new ReadOnlySpan<byte>(hash);
@@ -101,7 +104,7 @@ public static class WebhookHelpers
             {
                 return string.Create(bytes.Length * 2, ((IntPtr)ptr, bytes.Length), (Span<char> chars, (IntPtr Ptr, int Length) args) =>
                 {
-                    ReadOnlySpan<byte> bytes2 = new ReadOnlySpan<byte>((void*)args.Ptr, args.Length);
+                    ReadOnlySpan<byte> bytes2 = new((void*)args.Ptr, args.Length);
 
                     for (int i = 0; i < bytes2.Length; i++)
                     {
@@ -118,7 +121,7 @@ public static class WebhookHelpers
             }
         }
 #else
-        var builder = new StringBuilder(hash.Length * 2);
+        StringBuilder builder = new(hash.Length * 2);
 
         for (int i = 0; i < hash.Length; i++)
         {

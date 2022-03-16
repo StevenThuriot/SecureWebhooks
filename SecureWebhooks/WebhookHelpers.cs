@@ -17,7 +17,7 @@ public static class WebhookHelpers
         return CreateContentWithSecureHeader(secret, payloadString, headerName);
     }
 
-    private static StringContent CreateContentWithSecureHeader(string secret, string payload, string headerName = SecureWebhookConstants.HookSignatureHeader)
+    internal static StringContent CreateContentWithSecureHeader(string secret, string payload, string headerName = SecureWebhookConstants.HookSignatureHeader)
     {
 #if NETSTANDARD2_0
         const string mediaType = "application/json";

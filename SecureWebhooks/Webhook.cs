@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using System;
+﻿using System;
 using System.Net.Http;
-using System.Threading.Tasks;
 
 namespace SecureWebhooks;
 
-public class Webhook
+public partial class Webhook
 {
     protected readonly string _secret;
     protected readonly string _payload;
@@ -32,18 +30,6 @@ public class Webhook
         return this;
     }
 
-    public static Webhook Create<T>(string secret, T payload, Func<T, string> serialize, string headerName = SecureWebhookConstants.HookSignatureHeader)
-    {
-        var payloadString = serialize(payload);
-        return new(secret, payloadString, headerName);
-    }
-
-    public static async Task<Webhook<T>> FromAsync<T>(HttpRequest request, string secret, Func<string, T> deserialize, string headerName = SecureWebhookConstants.HookSignatureHeader)
-    {
-        var (isValid, payload) = await request.ValidateAndGetPayload(secret, headerName);
-        return new Webhook<T>(secret, payload, isValid, deserialize, headerName);
-    }
-
     public static implicit operator HttpContent(Webhook webhook)
     {
         var content = WebhookHelpers.CreateContentWithSecureHeader(secret: webhook._secret, payload: webhook._payload, headerName: webhook._headerName);
@@ -57,17 +43,14 @@ public class Webhook
     }
 }
 
-public class Webhook<T> : Webhook
+public sealed partial class Webhook<T> : Webhook
 {
-    private readonly Func<string, T> _deserialize;
-
     public bool IsValid { get; }
 
-    internal Webhook(string secret, string? payload, bool isValid, Func<string, T> deserialize, string headerName)
-        : base (secret, payload ?? "", headerName)
+    private Webhook(string secret, ValidationResult validationResult, string headerName)
+        : base(secret, validationResult.Payload ?? "", headerName)
     {
-        IsValid = isValid;
-        _deserialize = deserialize;
+        IsValid = validationResult;
     }
 
     public T ToObject()
@@ -90,7 +73,7 @@ public class Webhook<T> : Webhook
 
         try
         {
-            value = _deserialize(_payload);
+            value = Deserialize(_payload);
             return true;
         }
         catch

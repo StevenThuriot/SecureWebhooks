@@ -9,14 +9,8 @@ using System.Threading.Tasks;
 
 namespace SecureWebhooks;
 
-public static class WebhookHelpers
+public static partial class WebhookHelpers
 {
-    public static StringContent CreateContentWithSecureHeader<T>(string secret, T payload, Func<T, string> serialize, string headerName = SecureWebhookConstants.HookSignatureHeader)
-    {
-        var payloadString = serialize(payload);
-        return CreateContentWithSecureHeader(secret, payloadString, headerName);
-    }
-
     internal static StringContent CreateContentWithSecureHeader(string secret, string payload, string headerName = SecureWebhookConstants.HookSignatureHeader)
     {
 #if NETSTANDARD2_0
@@ -41,41 +35,36 @@ public static class WebhookHelpers
         headers.Add(headerName, CreateHeaderValue(secret, payloadBytes));
     }
 
-    public static async Task<(bool isValid, T? payload)> ValidateAndGetPayload<T>(this HttpRequest request, string secret, Func<string, T> deserialize, string headerName = SecureWebhookConstants.HookSignatureHeader)
-    {
-        var (isValid, payload) = await request.ValidateAndGetPayload(secret, headerName);
-
-        return !isValid
-                ? (false, default)
-                : (true, deserialize(payload!));
-    }
-
-    public static async Task<(bool isValid, string? payload)> ValidateAndGetPayload(this HttpRequest request, string secret, string headerName = SecureWebhookConstants.HookSignatureHeader)
+    public static Task<ValidationResult> ValidateAndGetPayload(this HttpRequest request, string secret, string headerName = SecureWebhookConstants.HookSignatureHeader)
     {
         if (!request.Headers.TryGetValue(headerName, out var values))
         {
-            return (false, default);
+            return Task.FromResult(default(ValidationResult));
         }
 
         var signature = values.ToString();
         if (signature?.StartsWith(SecureWebhookConstants.SignaturePrefix, StringComparison.OrdinalIgnoreCase) != true)
         {
-            return (false, default);
+            return Task.FromResult(default(ValidationResult));
         }
 
-        using MemoryStream ms = new();
-        await request.Body.CopyToAsync(ms);
-
-        var payload = ms.ToArray();
-
-        var validationSignature = CreateHeaderValue(secret, payload);
-
-        if (!StringComparer.OrdinalIgnoreCase.Equals(signature, validationSignature))
+        return Read();
+        async Task<ValidationResult> Read()
         {
-            return (false, default);
-        }
+            using MemoryStream ms = new();
+            await request.Body.CopyToAsync(ms);
 
-        return (true, Encoding.UTF8.GetString(payload));
+            var payload = ms.ToArray();
+
+            var validationSignature = CreateHeaderValue(secret, payload);
+
+            if (!StringComparer.OrdinalIgnoreCase.Equals(signature, validationSignature))
+            {
+                return default;
+            }
+
+            return Encoding.UTF8.GetString(payload);
+        }
     }
 
     private static string CreateHeaderValue(string secret, byte[] payload)

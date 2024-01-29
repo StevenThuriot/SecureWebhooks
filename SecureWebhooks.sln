@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SecureWebhooks", "SecureWebhooks\SecureWebhooks.csproj", "{DEC1C749-26B7-440D-AC68-5B431CC51280}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SecureWebhooks.SystemTextJson", "SecureWebhooks.SystemTextJson\SecureWebhooks.SystemTextJson.csproj", "{006C102B-18F5-40A2-BD5F-AD4A45679775}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecureWebhooks.SystemTextJson", "SecureWebhooks.SystemTextJson\SecureWebhooks.SystemTextJson.csproj", "{006C102B-18F5-40A2-BD5F-AD4A45679775}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SecureWebhooks.Newtonsoft", "SecureWebhooks.Newtonsoft\SecureWebhooks.Newtonsoft.csproj", "{730F11A5-44AE-43F1-B46D-32365C778EAE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecureWebhooks.Newtonsoft", "SecureWebhooks.Newtonsoft\SecureWebhooks.Newtonsoft.csproj", "{730F11A5-44AE-43F1-B46D-32365C778EAE}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "SecureWebhooks", "SecureWebhooks\SecureWebhooks.shproj", "{E18B820C-D03D-46DE-9D9C-951C0BCC8127}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,10 +15,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{DEC1C749-26B7-440D-AC68-5B431CC51280}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DEC1C749-26B7-440D-AC68-5B431CC51280}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DEC1C749-26B7-440D-AC68-5B431CC51280}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DEC1C749-26B7-440D-AC68-5B431CC51280}.Release|Any CPU.Build.0 = Release|Any CPU
 		{006C102B-18F5-40A2-BD5F-AD4A45679775}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{006C102B-18F5-40A2-BD5F-AD4A45679775}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{006C102B-18F5-40A2-BD5F-AD4A45679775}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -33,5 +29,10 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {41EC167C-3433-42F3-8AF8-52DE57B829AA}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		SecureWebhooks\SecureWebhooks.projitems*{006c102b-18f5-40a2-bd5f-ad4a45679775}*SharedItemsImports = 5
+		SecureWebhooks\SecureWebhooks.projitems*{730f11a5-44ae-43f1-b46d-32365c778eae}*SharedItemsImports = 5
+		SecureWebhooks\SecureWebhooks.projitems*{e18b820c-d03d-46de-9d9c-951c0bcc8127}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

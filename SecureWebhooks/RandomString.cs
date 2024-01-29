@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace SecureWebhooks;
 
-public class RandomString
+public sealed class RandomString
 {
     public const string Upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     public const string Lower = "abcdefghijklmnopqrstuvwxyz";

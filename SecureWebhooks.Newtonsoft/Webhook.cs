@@ -1,19 +1,36 @@
 ﻿using Microsoft.AspNetCore.Http;
-using SecureWebhooks;
+using Newtonsoft.Json;
 using System.Threading.Tasks;
-using WH = SecureWebhooks.Webhook;
 
-namespace Newtonsoft.Json.SecureWebhooks;
+namespace SecureWebhooks;
 
-public static class Webhook
+partial class Webhook
 {
-    public static WH Create<T>(string secret, T payload, string headerName = SecureWebhookConstants.HookSignatureHeader, JsonSerializerSettings? options = null)
+    public static Webhook Create<T>(string secret, T payload, string headerName = SecureWebhookConstants.HookSignatureHeader, JsonSerializerSettings? options = null)
     {
-        return WH.Create(secret, payload, x => JsonConvert.SerializeObject(x, options), headerName);
+        var payloadString = JsonConvert.SerializeObject(payload, options);
+        return new(secret, payloadString, headerName);
     }
 
-    public static Task<Webhook<T>> FromAsync<T>(HttpRequest request, string secret, string headerName = SecureWebhookConstants.HookSignatureHeader, JsonSerializerSettings? options = null)
+    public static async Task<Webhook<T>> FromAsync<T>(HttpRequest request, string secret, string headerName = SecureWebhookConstants.HookSignatureHeader, JsonSerializerSettings? options = null)
     {
-        return WH.FromAsync(request, secret, x => JsonConvert.DeserializeObject<T>(x, options)!, headerName);
+        var validationResult = await request.ValidateAndGetPayload(secret, headerName);
+        return new(secret, validationResult, headerName, options);
+    }
+}
+
+partial class Webhook<T>
+{
+    private readonly JsonSerializerSettings? _options;
+
+    internal Webhook(string secret, ValidationResult validationResult, string headerName, JsonSerializerSettings? options)
+        : this(secret, validationResult, headerName)
+    {
+        _options = options;
+    }
+
+    private T? Deserialize(string payload)
+    {
+        return JsonConvert.DeserializeObject<T>(payload, _options);
     }
 }
